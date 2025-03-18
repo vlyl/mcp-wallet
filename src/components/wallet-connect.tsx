@@ -16,7 +16,7 @@ export function WalletConnect() {
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto shadow-lg">
+    <Card className="w-full max-w-xs shadow-lg">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-2xl font-bold">Wallet</CardTitle>

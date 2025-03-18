@@ -2,6 +2,7 @@
 
 import { WalletConnect } from '@/components/wallet-connect'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { ChatBox } from '@/components/chat-box'
 
 export default function Home() {
   return (
@@ -10,13 +11,16 @@ export default function Home() {
         <ThemeToggle />
       </div>
       
-      <div className="w-full max-w-5xl mx-auto space-y-8">
+      <div className="w-full max-w-6xl mx-auto space-y-8">
         <div className="text-center space-y-2 mb-8">
           <h1 className="text-4xl font-bold tracking-tight">MCP Wallet</h1>
           <p className="text-muted-foreground">Connect your wallet to get started</p>
         </div>
         
-        <WalletConnect />
+        <div className="flex flex-col lg:flex-row gap-6 justify-center items-start">
+          <WalletConnect />
+          <ChatBox />
+        </div>
         
         <footer className="text-center text-sm text-muted-foreground mt-12">
           <p>Powered by Wagmi & Next.js</p>
