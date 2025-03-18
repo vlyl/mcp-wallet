@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "noEmit": false,
+    "outDir": "build",
+    "rootDir": "src/mcp",
+    "declaration": true,
+    "sourceMap": true
+  },
+  "include": ["src/mcp/server.ts"],
+  "exclude": ["node_modules", ".next", "src/app", "src/components"]
+} 

@@ -2,13 +2,19 @@
   "name": "mcp-wallet",
   "private": true,
   "version": "0.0.0",
+  "bin": {
+    "wallet-server": "./build/server.js"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build:mcp-server": "tsc -p tsconfig.server.json && chmod +x build/server.js",
+    "build:all": "pnpm build && pnpm build:mcp-server"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.7.0",
     "@radix-ui/react-avatar": "^1.1.3",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-dropdown-menu": "^2.1.6",
@@ -25,14 +31,15 @@
     "react-dom": "^18.3.1",
     "tailwind-merge": "^3.0.2",
     "viem": "latest",
-    "wagmi": "latest"
+    "wagmi": "latest",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@shadcn/ui": "^0.0.4",
     "@tailwindcss/postcss": "^4.0.14",
     "@tailwindcss/typography": "^0.5.16",
     "@tailwindcss/vite": "^4.0.14",
-    "@types/node": "^20.12.10",
+    "@types/node": "^20.17.24",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.4",
@@ -47,7 +54,7 @@
     "supports-color": "^9.4.0",
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5.4.5",
+    "typescript": "^5.8.2",
     "utf-8-validate": "^5.0.2"
   }
 }
