@@ -44,9 +44,9 @@ export function WalletConnect() {
         {account.status === 'connected' && (
           <div className="space-y-4">
             <div className="flex items-center space-x-4 p-4 bg-muted/50 rounded-lg">
-              <Avatar className="h-12 w-12 bg-primary/10 text-primary">
-                <Wallet className="h-6 w-6" />
-              </Avatar>
+              <div className="h-12 w-12 border-2 border-500 rounded-lg flex items-center justify-center bg-gray-200">
+                <Wallet className="h-6 w-6 text-gray-700" />
+              </div>
               <div className="flex-1 space-y-1">
                 <p className="text-sm font-medium">Connected Account</p>
                 <p className="text-xs text-muted-foreground">
