@@ -3,6 +3,7 @@
 import { WalletConnect } from '@/components/wallet-connect'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { ChatBox } from '@/components/chat-box'
+import { McpStatus } from '@/components/mcp-status'
 
 export default function Home() {
   return (
@@ -18,8 +19,13 @@ export default function Home() {
         </div>
         
         <div className="flex flex-col lg:flex-row gap-6 justify-center items-start">
-          <WalletConnect />
-          <ChatBox />
+          <div className="flex flex-col gap-6 w-full lg:w-auto">
+            <WalletConnect />
+            <McpStatus />
+          </div>
+          <div className="w-full lg:flex-1">
+            <ChatBox />
+          </div>
         </div>
         
         <footer className="text-center text-sm text-muted-foreground mt-12">

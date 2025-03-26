@@ -8,6 +8,7 @@ import { cookieToInitialState } from 'wagmi'
 
 import { getConfig } from '../wagmi'
 import { Providers } from './providers'
+import { Toaster } from '@/components/ui/toaster'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -32,6 +33,7 @@ export default function RootLayout({
         <ThemeProvider defaultTheme="system">
           <Providers initialState={initialState}>
             {children}
+            <Toaster />
           </Providers>
         </ThemeProvider>
       </body>

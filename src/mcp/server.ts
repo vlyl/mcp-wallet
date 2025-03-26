@@ -4,12 +4,10 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-const NWS_API_BASE = "https://api.weather.gov";
-const USER_AGENT = "weather-app/1.0";
 
 // Create server instance
 const server = new McpServer({
-  name: "weather",
+  name: "wallet",
   version: "1.0.0",
 });
 
@@ -70,6 +68,32 @@ async function main() {
   console.error("Wallet MCP Server running on stdio");
 }
 
+// 调用API端点连接钱包
+async function callWalletConnectApi(address: string) {
+  try {
+    // 本地开发环境下API URL
+    const apiUrl = 'http://localhost:3000/api/wallet-connect';
+    
+    // 发起HTTP请求
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API returned ${response.status}: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    return { success: false, error: String(error) };
+  }
+}
+
 server.tool(
   "connect-wallet",
   "Connet to a crypto wallet",
@@ -78,14 +102,54 @@ server.tool(
   },
   async ({ address }) => {
     const result = await connectWallet(address);
+    
+    // 如果提供了地址且连接成功，调用API
+    if (address && result.success) {
+      try {
+        const apiResult = await callWalletConnectApi(address);
+        
+        if (apiResult.success) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Connecting to wallet ${result.address}. I've sent a connection request to the frontend. The wallet interface should prompt you to connect shortly.`
+              }
+            ]
+          };
+        } else {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `I've updated the wallet state with address ${result.address}, but couldn't notify the frontend. You may need to click the connect button manually.`
+              }
+            ]
+          };
+        }
+      } catch (error) {
+        console.error("[MCP-SERVER] Error in connect-wallet tool:", error);
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Connecting to wallet ${result.address}... (Note: API call failed, but internal state updated)`
+            }
+          ]
+        };
+      }
+    }
+    
     return {
       content: [
         {
           type: "text",
-          text: `Connecting to wallet ${result.address}...`
+          text: result.success 
+            ? `Connecting to wallet ${result.address}...` 
+            : (result.error || "Failed to connect wallet. Please provide a valid address.")
         }
       ]
-    }
+    };
   }
 )
 

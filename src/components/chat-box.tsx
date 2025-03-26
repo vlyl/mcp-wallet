@@ -1,9 +1,13 @@
+'use client'
+
 import * as React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Send, User, MessagesSquare, PlusCircle, Trash2 } from "lucide-react"
+import { Send, User, MessagesSquare, PlusCircle, Trash2, AlertCircle } from "lucide-react"
+import { getInitializationStatus, processQuery, getAvailableTools } from "@/services/mcp-client-browser"
+import { useToast } from "@/components/ui/use-toast"
 
 interface Message {
   id: string
@@ -62,6 +66,28 @@ export function ChatBox() {
   ])
   const [activeConversation, setActiveConversation] = useState("1")
   const [conversationCounter, setConversationCounter] = useState(3)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const { toast } = useToast()
+  
+  // Check if MCP client is initialized and get available tools
+  const [mcpInitialized, setMcpInitialized] = useState(false)
+  const [availableTools, setAvailableTools] = useState<any[]>([])
+  
+  useEffect(() => {
+    setMcpInitialized(getInitializationStatus())
+    
+    // 定期检查状态
+    const checkInterval = setInterval(() => {
+      const status = getInitializationStatus()
+      setMcpInitialized(status)
+      if (status) {
+        setAvailableTools(getAvailableTools())
+        clearInterval(checkInterval)
+      }
+    }, 2000)
+    
+    return () => clearInterval(checkInterval)
+  }, [])
 
   // Create a new conversation
   const createNewConversation = () => {
@@ -141,26 +167,58 @@ export function ChatBox() {
     }
   }
 
-  const handleSendMessage = () => {
-    if (input.trim()) {
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        content: input,
-        sender: "user",
-        timestamp: new Date(),
+  const handleSendMessage = async () => {
+    if (!input.trim()) return
+    
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: input,
+      sender: "user",
+      timestamp: new Date(),
+    }
+    
+    // Add user message to the chat
+    setMessages(prev => [...prev, userMessage])
+    setInput("")
+    
+    // Get MCP client initialization status
+    const isInitialized = getInitializationStatus();
+    if (!isInitialized) {
+      try {
+        // Try to initialize MCP client
+        const initSuccess = await fetch('/api/mcp-init').then(r => r.json());
+        
+        if (!initSuccess.success || !initSuccess.initialized) {
+          // If initialization fails, try to rebuild the server
+          const rebuildAttempt = await fetch('/api/mcp-rebuild', {
+            method: 'POST'
+          }).then(r => r.json());
+          
+          if (rebuildAttempt.success) {
+            // Rebuild successful, try to initialize again
+            await fetch('/api/mcp-init').then(r => r.json());
+          }
+        }
+      } catch (error) {
+        // Handle initialization error
       }
       
-      setMessages([...messages, newMessage])
-      
-      // Simulate a response after a short delay
-      setTimeout(() => {
-        const botResponse: Message = {
+      // Check if initialization was successful
+      if (!getInitializationStatus()) {
+        // If MCP client is not initialized, show error
+        toast({
+          title: "Error",
+          description: "MCP client is not initialized. Please refresh the page or contact support.",
+          variant: "destructive",
+        })
+        
+        const errorMessage: Message = {
           id: (Date.now() + 1).toString(),
-          content: "I received your message. How can I help further?",
+          content: "Sorry, I'm not able to process your request at the moment. The AI service is unavailable.",
           sender: "bot",
           timestamp: new Date(),
         }
-        setMessages(prev => [...prev, botResponse])
+        setMessages(prev => [...prev, errorMessage])
         
         // Update the conversation
         setConversations(prev => 
@@ -168,23 +226,96 @@ export function ChatBox() {
             conv.id === activeConversation 
               ? {
                   ...conv, 
-                  lastMessage: botResponse.content, 
+                  lastMessage: errorMessage.content ? errorMessage.content.slice(0, 50) + (errorMessage.content.length > 50 ? '...' : '') : 'No response', 
                   timestamp: new Date(),
-                  messages: [...messages, newMessage, botResponse]
+                  messages: [...messages, userMessage, errorMessage]
                 } 
               : conv
           )
         )
-      }, 1000)
+        return
+      }
+    }
+    
+    // Create a placeholder message for processing
+    const processingMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      content: "Processing your request...",
+      sender: "bot",
+      timestamp: new Date(),
+    }
+    
+    try {
+      setIsProcessing(true)
       
-      setInput("")
+      // Add processing message to the chat
+      setMessages(prev => [...prev, processingMessage])
+      
+      // Get response from MCP client via API
+      const response = await processQuery(input)
+      
+      // Remove processing message and add the actual response
+      setMessages(prev => {
+        // Filter out the processing message
+        const filteredMessages = prev.filter(msg => msg.id !== processingMessage.id)
+        
+        // Create new bot message with response
+        const botMessage: Message = {
+          id: (Date.now() + 2).toString(),
+          content: response,
+          sender: "bot",
+          timestamp: new Date(),
+        }
+        
+        // Update the conversation in state
+        setConversations(state => 
+          state.map(conv => 
+            conv.id === activeConversation 
+              ? {
+                  ...conv, 
+                  lastMessage: botMessage.content ? botMessage.content.slice(0, 50) + (botMessage.content.length > 50 ? '...' : '') : 'No response', 
+                  timestamp: new Date(),
+                  messages: [...filteredMessages, botMessage]
+                } 
+              : conv
+          )
+        )
+        
+        return [...filteredMessages, botMessage]
+      })
+    } catch (error) {
+      // Remove processing message and add error message
+      setMessages(prev => {
+        // Filter out the processing message
+        const filteredMessages = prev.filter(msg => msg.id !== processingMessage.id)
+        
+        // Create error message
+        const errorMessage: Message = {
+          id: (Date.now() + 2).toString(),
+          content: "Sorry, there was an error processing your request. Please try again.",
+          sender: "bot",
+          timestamp: new Date(),
+        }
+        
+        return [...filteredMessages, errorMessage]
+      })
+      
+      toast({
+        title: "Error",
+        description: "Failed to process your message. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsProcessing(false)
     }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      handleSendMessage()
+      if (!isProcessing) {
+        handleSendMessage()
+      }
     }
   }
 
@@ -259,8 +390,14 @@ export function ChatBox() {
       {/* Chat Area */}
       <div className="w-3/4 flex flex-col">
         <CardHeader className="p-3 border-b">
-          <CardTitle className="text-sm font-medium">
-            {conversations.find(c => c.id === activeConversation)?.title || "Chat"}
+          <CardTitle className="text-sm font-medium flex items-center justify-between">
+            <span>{conversations.find(c => c.id === activeConversation)?.title || "Chat"}</span>
+            {!mcpInitialized && (
+              <div className="flex items-center text-amber-500 text-xs">
+                <AlertCircle className="h-3 w-3 mr-1" />
+                <span>AI service disconnected</span>
+              </div>
+            )}
           </CardTitle>
         </CardHeader>
         
@@ -292,7 +429,7 @@ export function ChatBox() {
                     {formatTime(message.timestamp)}
                   </span>
                 </div>
-                <p className="text-xs">{message.content}</p>
+                <p className="text-xs whitespace-pre-wrap">{message.content}</p>
               </div>
             </div>
           ))}
@@ -307,12 +444,13 @@ export function ChatBox() {
               placeholder="Type your message..."
               className="flex-1 resize-none rounded-md border border-input bg-transparent p-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[40px] max-h-[80px]"
               rows={1}
+              disabled={isProcessing || !mcpInitialized}
             />
             <Button 
               size="icon" 
               className="h-10 w-10"
               onClick={handleSendMessage}
-              disabled={!input.trim()}
+              disabled={!input.trim() || isProcessing || !mcpInitialized}
             >
               <Send className="h-4 w-4" />
             </Button>
