@@ -36,3 +36,6 @@ next-env.d.ts
 
 .cursorrules
 .cursor
+
+# Cursor editor files
+/.cursor/
