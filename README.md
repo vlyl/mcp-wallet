@@ -1,10 +1,11 @@
 # MCP Wallet
 
+![MCP Wallet](/public/images/mcp-wallet-banner.svg)
+
 > **⚠️ WARNING**: This is an experimental project. DO NOT use in production environments. Please manage your API keys and private keys securely.
 
 A modern web application that integrates Model Context Protocol (MCP) with cryptocurrency wallet management, providing a seamless interface for AI-assisted crypto operations.
 
-![MCP Wallet](https://via.placeholder.com/800x400?text=MCP+Wallet)
 
 ## Features
 
