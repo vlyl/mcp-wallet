@@ -76,7 +76,7 @@ export function ChatBox() {
   useEffect(() => {
     setMcpInitialized(getInitializationStatus())
     
-    // 定期检查状态
+    // polling check status
     const checkInterval = setInterval(() => {
       const status = getInitializationStatus()
       setMcpInitialized(status)

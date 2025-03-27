@@ -19,7 +19,7 @@ export function WalletConnect() {
     return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
   
-  // 轮询检查待处理的钱包连接请求
+  // polling check pending requests
   useEffect(() => {
     const checkPendingRequests = async () => {
       try {
@@ -27,19 +27,19 @@ export function WalletConnect() {
         const data = await response.json();
         
         if (data.success && data.pendingRequests && data.pendingRequests.length > 0) {
-          // 有待处理的请求，获取第一个
+          // there are pending requests, get the first one
           const requestId = data.pendingRequests[0];
           
-          // 获取并移除请求
+          // get and remove the request
           const requestResponse = await fetch(`/api/wallet-connect?requestId=${requestId}`);
           const requestData = await requestResponse.json();
           
           if (requestData.success && requestData.exists) {
-            // 找到可用的注入连接器
+            // find the available injected connector
             const injectedConnector = connectors.find(c => c.name.toLowerCase().includes('injected'));
             
             if (injectedConnector) {
-              // 触发连接
+              // trigger connection
               toast({
                 title: 'Wallet Connection Requested',
                 description: 'Connecting to wallet via MCP...',
@@ -54,14 +54,14 @@ export function WalletConnect() {
       }
     };
     
-    // 设置轮询间隔
+    // set polling interval, 3 seconds
     const intervalId = setInterval(checkPendingRequests, 3000);
     
-    // 组件卸载时清除定时器
+    // clear the timer when the component unmounts
     return () => clearInterval(intervalId);
   }, [connect, connectors, toast]);
   
-  // 手动检查待处理连接请求
+  // manually check pending connections
   const checkPendingConnections = async () => {
     try {
       setPendingCheckLoading(true);

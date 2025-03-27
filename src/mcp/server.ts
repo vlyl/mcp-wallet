@@ -11,7 +11,7 @@ const server = new McpServer({
   version: "1.0.0",
 });
 
-// 钱包连接状态
+// wallet connection state
 type WalletState = {
   address: string | null;
   isConnected: boolean;
@@ -61,20 +61,20 @@ function getWalletState() {
   return walletState;
 }
 
-// 服务器主程序
+// server main program
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("Wallet MCP Server running on stdio");
 }
 
-// 调用API端点连接钱包
+// call the API endpoint to connect wallet
 async function callWalletConnectApi(address: string) {
   try {
-    // 本地开发环境下API URL
+    // local development API URL
     const apiUrl = 'http://localhost:3000/api/wallet-connect';
     
-    // 发起HTTP请求
+    // send HTTP request
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -103,7 +103,7 @@ server.tool(
   async ({ address }) => {
     const result = await connectWallet(address);
     
-    // 如果提供了地址且连接成功，调用API
+    // If address is provided and connection is successful, call API
     if (address && result.success) {
       try {
         const apiResult = await callWalletConnectApi(address);
@@ -153,7 +153,7 @@ server.tool(
   }
 )
 
-// 仅在直接运行脚本时执行主程序
+// only execute the main program when running the script directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {
     console.error("Fatal error in main():", error);
@@ -161,5 +161,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   });
 }
 
-// 导出函数供API路由使用
+// export functions for API routes
 export { connectWallet, disconnectWallet, getWalletState };

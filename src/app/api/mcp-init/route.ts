@@ -5,10 +5,10 @@ import { Anthropic } from '@anthropic-ai/sdk';
 
 export async function GET(request: NextRequest) {
   try {
-    // 检查是否已初始化
+    // check if initialized
     const existingClient = getMcpClient();
     if (existingClient && existingClient.getInitializationStatus()) {
-      // 获取工具列表
+      // get tools list
       const tools = existingClient.getTools();
       
       return NextResponse.json({ 
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       });
     }
     
-    // 获取环境变量
+    // get environment variable
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
@@ -27,11 +27,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 验证API密钥是否有效
+    // validate API key
     try {
       const anthropic = new Anthropic({ apiKey });
       
-      // 尝试一个简单的API调用来验证密钥
+      // try a simple API call to validate the key
       const models = await anthropic.models.list();
     } catch (error) {
       return NextResponse.json(
@@ -43,16 +43,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 初始化MCP客户端
+    // initialize MCP client
     const mcpClient = initMcpClient(apiKey);
     
-    // 确定server.js的路径
+    // determine the path to server.js
     let serverPath = 'build/server.js';
     if (process.env.NODE_ENV === 'production') {
       serverPath = path.join(process.cwd(), 'build/server.js');
     }
 
-    // 确认服务器文件存在
+    // confirm the server file exists
     const fs = require('fs');
     if (!fs.existsSync(serverPath)) {
       return NextResponse.json(
@@ -61,32 +61,32 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // 连接到服务器，添加重试机制
+    // connect to the server, add retry mechanism
     const MAX_RETRIES = 2;
     let retryCount = 0;
     let lastError = null;
     
     while (retryCount <= MAX_RETRIES) {
       if (retryCount > 0) {
-        // 等待后重试
+        // wait and retry
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
       
       try {
         await mcpClient.connectToServer(serverPath);
         
-        // 验证是否真正初始化
+        // validate if it is really initialized
         if (!mcpClient.getInitializationStatus()) {
           throw new Error("Initialization status check failed after connection");
         }
         
-        // 检查工具数量
+        // check the number of tools
         const tools = mcpClient.getTools();
         if (!tools || tools.length === 0) {
           throw new Error("No available tools found");
         }
         
-        // 如果到达这里，表示初始化成功
+        // if we get here, initialization is successful
         return NextResponse.json({ 
           success: true, 
           initialized: true,
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // 所有重试都失败
+    // all retries failed
     return NextResponse.json(
       { 
         success: false, 

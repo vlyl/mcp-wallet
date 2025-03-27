@@ -30,7 +30,7 @@ export function useWalletConnect() {
         
       await connect({ connector });
       
-      // 在wagmi的connect回调中不会立即有地址，需要等待account hook更新
+      // in the wagmi connect callback, the address is not immediately available, so we need to wait for the account hook to update
       setState(prev => ({
         ...prev,
         isConnecting: false,
@@ -72,7 +72,7 @@ export function useWalletConnect() {
     return { success: true };
   }, [disconnect]);
 
-  // 更新state以反映最新的wagmi状态
+  // update state to reflect the latest wagmi state
   if (isConnected && address && !state.isConnected) {
     setState({
       address,

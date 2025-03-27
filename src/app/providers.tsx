@@ -16,7 +16,7 @@ export function Providers(props: {
   const [isMcpInitialized, setIsMcpInitialized] = useState(false)
   const [mcpError, setMcpError] = useState<string | null>(null)
 
-  // 初始化MCP客户端
+  // Initialize MCP client
   useEffect(() => {
     const initializeMcp = async () => {
       try {

@@ -1,6 +1,5 @@
 'use client'
 
-// 简单的toast hook实现，可以根据项目需要扩展
 import { useState } from 'react';
 
 interface Toast {
@@ -28,7 +27,6 @@ export function useToast() {
 
     setToasts((prev) => [...prev, newToast]);
 
-    // 自动移除toast
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 3000);

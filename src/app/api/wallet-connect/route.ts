@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// 全局变量存储钱包连接的请求
+// store pending wallet connection requests
 let pendingWalletRequests: Record<string, boolean> = {};
 
 export async function POST(request: NextRequest) {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // 存储连接请求，前端将轮询此请求
+    // store the connection request, the frontend will poll this request
     const requestId = Date.now().toString();
     pendingWalletRequests[requestId] = true;
     
@@ -37,12 +37,12 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  // 返回所有待处理的钱包连接请求
+  // return all pending wallet connection requests
   const searchParams = request.nextUrl.searchParams;
   const requestId = searchParams.get('requestId');
   
   if (requestId && requestId in pendingWalletRequests) {
-    // 如果查询特定请求且存在，则返回并移除
+    // if querying a specific request and it exists, return and remove
     const exists = pendingWalletRequests[requestId];
     delete pendingWalletRequests[requestId];
     

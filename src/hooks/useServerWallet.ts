@@ -11,14 +11,14 @@ export function useServerWallet() {
     disconnectWallet: clientDisconnectWallet 
   } = useWalletConnect();
 
-  // 当客户端钱包连接状态改变时，同步到服务器
+  // when the client wallet connection state changes, sync to the server
   useEffect(() => {
     if (isConnected && address) {
       syncAddressToServer(address);
     }
   }, [isConnected, address]);
 
-  // 将地址同步到服务器
+  // sync the address to the server
   const syncAddressToServer = useCallback(async (walletAddress: string) => {
     try {
       const response = await fetch('/api/wallet', {
@@ -37,7 +37,7 @@ export function useServerWallet() {
     }
   }, []);
 
-  // 连接钱包（客户端连接后同步到服务器）
+  // connect wallet (sync to server after client connection)
   const connectWallet = useCallback(async (connectorId?: string) => {
     const result = await clientConnectWallet(connectorId);
     
@@ -48,7 +48,7 @@ export function useServerWallet() {
     return result;
   }, [clientConnectWallet, syncAddressToServer]);
 
-  // 断开钱包连接（客户端断开后同步到服务器）
+  // disconnect wallet (sync to server after client disconnect)
   const disconnectWallet = useCallback(async () => {
     clientDisconnectWallet();
     

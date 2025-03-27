@@ -4,7 +4,7 @@ import path from 'path';
 
 export async function POST(request: NextRequest) {
   try {
-    // 获取请求体
+    // Get request body
     const body = await request.json();
     const { query } = body;
     
@@ -15,10 +15,10 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // 获取MCP客户端
+    // Get MCP client
     let mcpClient = getMcpClient();
     
-    // 如果没有初始化则尝试初始化
+    // Initialize if not initialized
     if (!mcpClient || !mcpClient.getInitializationStatus()) {
       const apiKey = process.env.ANTHROPIC_API_KEY;
       if (!apiKey) {
@@ -32,16 +32,16 @@ export async function POST(request: NextRequest) {
         mcpClient = initMcpClient(apiKey);
       }
       
-      // 尝试连接到服务器
+      // Try to connect to server
       if (!mcpClient.getInitializationStatus()) {
         try {
-          // 确定server.js的路径
+          // Determine server.js path
           let serverPath = 'build/server.js';
           if (process.env.NODE_ENV === 'production') {
             serverPath = path.join(process.cwd(), 'build/server.js');
           }
           
-          // 检查文件是否存在
+          // Check if file exists
           const fs = require('fs');
           if (!fs.existsSync(serverPath)) {
             return NextResponse.json(
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
             );
           }
           
-          // 尝试连接
+          // Try to connect
           await mcpClient.connectToServer(serverPath);
         } catch (error) {
           return NextResponse.json(
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // 再次确认初始化状态
+    // Verify initialization status again
     if (!mcpClient.getInitializationStatus()) {
       return NextResponse.json(
         { success: false, error: 'MCP client is not initialized' },
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // 处理查询
+    // Process query
     try {
       const response = await mcpClient.processQuery(query);
       
@@ -78,12 +78,12 @@ export async function POST(request: NextRequest) {
         result: response 
       });
     } catch (error: unknown) {
-      // 如果是由于MCP客户端未初始化导致的错误，标记客户端为未初始化
+      // If error is due to uninitialized MCP client, mark client as uninitialized
       const errorMessage = error instanceof Error ? error.message : String(error);
       
       if (errorMessage.includes('not initialized')) {
         if (mcpClient) {
-          // 清理客户端
+          // Clean up client
           await mcpClient.cleanup();
         }
       }

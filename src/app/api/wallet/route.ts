@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectWallet, disconnectWallet, getWalletState } from '@/mcp/server';
 
-// 获取钱包状态
+// get wallet state
 export async function GET() {
   try {
     const walletState = getWalletState();
@@ -20,7 +20,7 @@ export async function GET() {
   }
 }
 
-// 连接钱包（从前端设置地址）
+// connect wallet (set address from frontend)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// 断开钱包连接
+// disconnect wallet
 export async function DELETE() {
   try {
     const result = await disconnectWallet();
