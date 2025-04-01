@@ -72,7 +72,8 @@ async function main() {
 async function callWalletConnectApi(address: string) {
   try {
     // local development API URL
-    const apiUrl = 'http://localhost:3000/api/wallet-connect';
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    const apiUrl = `${baseUrl}/api/wallet-connect`;
     
     // send HTTP request
     const response = await fetch(apiUrl, {
